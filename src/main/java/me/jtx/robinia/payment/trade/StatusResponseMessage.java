@@ -1,4 +1,4 @@
-package me.jtx.robinia.payment.trade.alipay.vo;
+package me.jtx.robinia.payment.trade;
 
 public class StatusResponseMessage extends ResponseMessage {
     private boolean status;
