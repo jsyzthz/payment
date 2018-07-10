@@ -19,12 +19,14 @@ import com.alipay.api.domain.TradeFundBill;
 import com.alipay.api.response.AlipayTradePrecreateResponse;
 import com.alipay.api.response.AlipayTradeQueryResponse;
 
+import me.jtx.robinia.payment.trade.alipay.config.Configs;
 import me.jtx.robinia.payment.trade.alipay.model.builder.AlipayTradeQueryRequestBuilder;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FPayResult;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FPrecreateResult;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FQueryResult;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FRefundResult;
 import me.jtx.robinia.payment.trade.alipay.service.AlipayTradeService;
+import me.jtx.robinia.payment.trade.alipay.service.impl.AlipayTradeServiceImpl;
 import me.jtx.robinia.payment.trade.alipay.utils.Utils;
 import me.jtx.robinia.payment.trade.alipay.vo.PayPrecreateResponseMessage;
 import me.jtx.robinia.payment.trade.alipay.vo.PayPrecreateVO;
@@ -39,9 +41,20 @@ public class AlipayTradeController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AlipayTradeController.class);
 
-    @Autowired
-    private AlipayTradeService tradeService;
+    private static AlipayTradeService tradeService;
 
+    
+    static{
+        /** 一定要在创建AlipayTradeService之前调用Configs.init()设置默认参数
+         *  Configs会读取classpath下的zfbinfo.properties文件配置信息，如果找不到该文件则确认该文件是否在classpath目录
+         */
+        Configs.init("zfbinfo.properties");
+
+        /** 使用Configs提供的默认参数
+         *  AlipayTradeService可以使用单例或者为静态成员对象，不需要反复new
+         */
+        tradeService = new AlipayTradeServiceImpl.ClientBuilder().build();
+    }
     /**
      * 当面付2.0
      * 
@@ -53,7 +66,7 @@ public class AlipayTradeController {
         PayResponseMessage responseMessage = new PayResponseMessage();
         responseMessage.setTradeNo(pay.getTradeNo());
         if (validResult.hasErrors()) {
-            responseMessage.setErrorMessage("Error!");
+            responseMessage.setErrorMessage(validResult.getFieldError().getDefaultMessage());
             return responseMessage;
         }
         // 调用tradePay方法获取当面付应答

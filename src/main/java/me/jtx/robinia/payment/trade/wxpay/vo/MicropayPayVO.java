@@ -7,18 +7,16 @@ import java.util.Map;
  * @author huazhong
  * @date 2018/07/09
  */
-public class PayVO {
+public class MicropayPayVO {
     private String tradeNo;
     private String body;
-    //自定义参数，可以为终端设备号(门店号或收银设备ID)，PC网页或公众号内支付可以传"WEB"
+    // 自定义参数，可以为终端设备号(门店号或收银设备ID)，PC网页或公众号内支付可以传"WEB"
     private String deviceInfo;
     private String feeType;
     private String totalFee;
-    //APP和网页支付提交用户端ip，Native支付填调用微信支付API的机器IP。
+    // APP和网页支付提交用户端ip，Native支付填调用微信支付API的机器IP。
     private String spbillCreateIp;
-    private String notifyURL;
-    private String tradeType;
-    private String productId;
+    private String authCode;
 
     public String getTradeNo() {
         return tradeNo;
@@ -68,28 +66,12 @@ public class PayVO {
         this.spbillCreateIp = spbillCreateIp;
     }
 
-    public String getNotifyURL() {
-        return notifyURL;
+    public String getAuthCode() {
+        return authCode;
     }
 
-    public void setNotifyURL(String notifyURL) {
-        this.notifyURL = notifyURL;
-    }
-
-    public String getTradeType() {
-        return tradeType;
-    }
-
-    public void setTradeType(String tradeType) {
-        this.tradeType = tradeType;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public void setProductId(String productId) {
-        this.productId = productId;
+    public void setAuthCode(String authCode) {
+        this.authCode = authCode;
     }
 
     public Map<String, String> getParams() {
@@ -100,9 +82,7 @@ public class PayVO {
         data.put("fee_type", feeType);
         data.put("total_fee", totalFee);
         data.put("spbill_create_ip", spbillCreateIp);
-        data.put("notify_url", notifyURL);
-        data.put("trade_type", tradeType); // 此处指定为扫码支付
-        data.put("product_id", productId);
+        data.put("auth_code", authCode);
         return data;
     }
 }

@@ -1,17 +1,19 @@
 package me.jtx.robinia.payment.trade.alipay.service.impl;
 
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+
 import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.request.AlipayTradePayRequest;
 import com.alipay.api.response.AlipayTradePayResponse;
 import com.alipay.api.response.AlipayTradeQueryResponse;
+
 import me.jtx.robinia.payment.trade.alipay.config.Configs;
 import me.jtx.robinia.payment.trade.alipay.config.Constants;
 import me.jtx.robinia.payment.trade.alipay.model.TradeStatus;
 import me.jtx.robinia.payment.trade.alipay.model.builder.AlipayTradePayRequestBuilder;
 import me.jtx.robinia.payment.trade.alipay.model.builder.AlipayTradeQueryRequestBuilder;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FPayResult;
-
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Created by liuyangkly on 15/7/29.
