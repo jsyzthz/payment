@@ -5,8 +5,8 @@ import javax.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +19,7 @@ import com.alipay.api.domain.TradeFundBill;
 import com.alipay.api.response.AlipayTradePrecreateResponse;
 import com.alipay.api.response.AlipayTradeQueryResponse;
 
+import me.jtx.robinia.payment.trade.Result;
 import me.jtx.robinia.payment.trade.alipay.config.Configs;
 import me.jtx.robinia.payment.trade.alipay.model.builder.AlipayTradeQueryRequestBuilder;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FPayResult;
@@ -43,55 +44,65 @@ public class AlipayTradeController {
 
     private static AlipayTradeService tradeService;
 
-    
-    static{
-        /** 一定要在创建AlipayTradeService之前调用Configs.init()设置默认参数
-         *  Configs会读取classpath下的zfbinfo.properties文件配置信息，如果找不到该文件则确认该文件是否在classpath目录
+    static {
+        /**
+         * 一定要在创建AlipayTradeService之前调用Configs.init()设置默认参数
+         * Configs会读取classpath下的zfbinfo.properties文件配置信息，如果找不到该文件则确认该文件是否在classpath目录
          */
         Configs.init("zfbinfo.properties");
 
-        /** 使用Configs提供的默认参数
-         *  AlipayTradeService可以使用单例或者为静态成员对象，不需要反复new
+        /**
+         * 使用Configs提供的默认参数 AlipayTradeService可以使用单例或者为静态成员对象，不需要反复new
          */
         tradeService = new AlipayTradeServiceImpl.ClientBuilder().build();
     }
+
     /**
-     * 当面付2.0
+     * 当面付2.0 - 条码支付
      * 
      * @param payVo
      * @return
      */
     @RequestMapping(value = "/pay", method = {RequestMethod.POST})
-    public @ResponseBody PayResponseMessage tradePay(@ModelAttribute @Valid PayVO pay, BindingResult validResult) {
-        PayResponseMessage responseMessage = new PayResponseMessage();
-        responseMessage.setTradeNo(pay.getTradeNo());
-        if (validResult.hasErrors()) {
-            responseMessage.setErrorMessage(validResult.getFieldError().getDefaultMessage());
-            return responseMessage;
-        }
+    public @ResponseBody Result<PayResponseMessage> tradePay(@Valid PayVO pay, BindingResult result2)
+        throws MethodArgumentNotValidException {
+        LOGGER.info("Start alipay barcode pay");
+        // if (validResult.hasErrors()) {
+        // LOGGER.error("Parameter error:{}", validResult.getFieldError().getDefaultMessage());
+        // return Result.createByErrorResultMessage(validResult.getFieldError().getDefaultMessage());
+        // }
+        Result<PayResponseMessage> result = null;
         // 调用tradePay方法获取当面付应答
         AlipayF2FPayResult payResult = tradeService.tradePay(pay.getBuilder());
+        PayResponseMessage responseMessage = new PayResponseMessage();
+        responseMessage.setTradeNo(pay.getTradeNo());
         switch (payResult.getTradeStatus()) {
             case SUCCESS:
-                LOGGER.info("支付宝支付成功: )");
+                LOGGER.info("Alipay barcode pay success.");
+                // LOGGER.info("支付宝支付成功: )");
+                result = Result.createBySuccessResult("SUCCESS", responseMessage);
                 break;
 
             case FAILED:
-                responseMessage.setErrorMessage("FAILED!");
-                LOGGER.error("支付宝支付失败!!!");
+                LOGGER.info("Alipay barcode pay failed.");
+                result = Result.createByErrorResult("FAILED", responseMessage);
+                // LOGGER.error("支付宝支付失败!!!");
                 break;
 
             case UNKNOWN:
-                responseMessage.setErrorMessage("UNKNOWN!");
-                LOGGER.error("系统异常，订单状态未知!!!");
+                LOGGER.info("System exception, order status unknown.");
+                result = Result.createByErrorResult("UNKNOWN", responseMessage);
+                // LOGGER.error("系统异常，订单状态未知!!!");
                 break;
 
             default:
-                LOGGER.error("不支持的交易状态，交易返回异常!!!");
-                responseMessage.setErrorMessage("UNKNOWN!");
+                LOGGER.info("Unsupport transaction status.");
+                // LOGGER.error("不支持的交易状态，交易返回异常!!!");
+                result = Result.createByErrorResult("DEFAULT", responseMessage);
                 break;
         }
-        return responseMessage;
+        LOGGER.info("End alipay barcode pay");
+        return result;
     }
 
     /**
@@ -145,17 +156,17 @@ public class AlipayTradeController {
 
             case FAILED:
                 LOGGER.error("支付宝退款失败!!!");
-                refundResponseMessage.setErrorMessage("支付宝退款失败!!!");
+                // refundResponseMessage.setErrorMessage("支付宝退款失败!!!");
                 break;
 
             case UNKNOWN:
                 LOGGER.error("系统异常，订单退款状态未知!!!");
-                refundResponseMessage.setErrorMessage("系统异常，订单退款状态未知!!!");
+                // refundResponseMessage.setErrorMessage("系统异常，订单退款状态未知!!!");
                 break;
 
             default:
                 LOGGER.error("不支持的交易状态，交易返回异常!!!");
-                refundResponseMessage.setErrorMessage("不支持的交易状态，交易返回异常!!!");
+                // refundResponseMessage.setErrorMessage("不支持的交易状态，交易返回异常!!!");
                 break;
         }
 
@@ -168,7 +179,7 @@ public class AlipayTradeController {
         PayPrecreateResponseMessage precreateResponseMessage = new PayPrecreateResponseMessage();
         precreateResponseMessage.setTradeNo(pay.getTradeNo());
         if (validResult.hasErrors()) {
-            precreateResponseMessage.setErrorMessage("Error!");
+            // precreateResponseMessage.setErrorMessage("Error!");
             return precreateResponseMessage;
         }
         AlipayF2FPrecreateResult result = tradeService.tradePrecreate(pay.getBuilder());
@@ -188,17 +199,17 @@ public class AlipayTradeController {
 
             case FAILED:
                 LOGGER.error("支付宝预下单失败!!!");
-                precreateResponseMessage.setErrorMessage("支付宝预下单失败!!!");
+                // precreateResponseMessage.setErrorMessage("支付宝预下单失败!!!");
                 break;
 
             case UNKNOWN:
                 LOGGER.error("系统异常，预下单状态未知!!!");
-                precreateResponseMessage.setErrorMessage("系统异常，预下单状态未知!!!");
+                // precreateResponseMessage.setErrorMessage("系统异常，预下单状态未知!!!");
                 break;
 
             default:
                 LOGGER.error("不支持的交易状态，交易返回异常!!!");
-                precreateResponseMessage.setErrorMessage("不支持的交易状态，交易返回异常!!!");
+                // precreateResponseMessage.setErrorMessage("不支持的交易状态，交易返回异常!!!");
                 break;
         }
         return precreateResponseMessage;

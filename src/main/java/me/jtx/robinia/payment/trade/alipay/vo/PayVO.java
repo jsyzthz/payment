@@ -16,7 +16,7 @@ import me.jtx.robinia.payment.trade.alipay.model.builder.AlipayTradePayRequestBu
 public class PayVO {
     @NotNull(message = "商户订单号不能为空")
     private String tradeNo;
-    @NotNull(message = "订单名称不能为空")
+    @NotNull
     private String subject;
     @NotNull(message = "付款金额不能为空")
     private String totalAmount;

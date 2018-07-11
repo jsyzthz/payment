@@ -1,10 +1,8 @@
 package me.jtx.robinia.payment.trade.alipay.vo;
 
-import me.jtx.robinia.payment.trade.StatusResponseMessage;
-
-public class PayPrecreateResponseMessage extends StatusResponseMessage {
+public class PayPrecreateResponseMessage {
     private String tradeNo;
-    
+
     private String barcodeFilePath;
 
     public String getTradeNo() {
@@ -21,10 +19,5 @@ public class PayPrecreateResponseMessage extends StatusResponseMessage {
 
     public void setBarcodeFilePath(String barcodeFilePath) {
         this.barcodeFilePath = barcodeFilePath;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        super.setMessage(errorMessage);
-        super.setStatus(false);
     }
 }

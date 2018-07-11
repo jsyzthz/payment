@@ -27,7 +27,7 @@ public class WXPayTradeController {
         PayResponseMessage responseMessage = new PayResponseMessage();
         responseMessage.setTradeNo(pay.getTradeNo());
         if (validResult.hasErrors()) {
-            responseMessage.setErrorMessage("Error!");
+//            responseMessage.setErrorMessage("Error!");
             return responseMessage;
         }
 
@@ -46,7 +46,7 @@ public class WXPayTradeController {
         PayResponseMessage responseMessage = new PayResponseMessage();
         responseMessage.setTradeNo(pay.getTradeNo());
         if (validResult.hasErrors()) {
-            responseMessage.setErrorMessage("Error!");
+//            responseMessage.setErrorMessage("Error!");
             return responseMessage;
         }
 

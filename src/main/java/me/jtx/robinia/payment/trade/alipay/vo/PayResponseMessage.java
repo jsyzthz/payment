@@ -1,8 +1,6 @@
 package me.jtx.robinia.payment.trade.alipay.vo;
 
-import me.jtx.robinia.payment.trade.StatusResponseMessage;
-
-public class PayResponseMessage extends StatusResponseMessage {
+public class PayResponseMessage {
     private String tradeNo;
 
     public String getTradeNo() {
@@ -13,8 +11,4 @@ public class PayResponseMessage extends StatusResponseMessage {
         this.tradeNo = tradeNo;
     }
 
-    public void setErrorMessage(String errorMessage) {
-        super.setMessage(errorMessage);
-        super.setStatus(false);
-    }
 }
