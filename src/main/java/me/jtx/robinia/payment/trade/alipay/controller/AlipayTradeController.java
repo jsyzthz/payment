@@ -9,6 +9,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -20,7 +21,7 @@ import com.alipay.api.response.AlipayTradePrecreateResponse;
 import com.alipay.api.response.AlipayTradeQueryResponse;
 
 import me.jtx.robinia.payment.trade.Result;
-import me.jtx.robinia.payment.trade.alipay.config.Configs;
+import me.jtx.robinia.payment.trade.alipay.config.AliPayConfig;
 import me.jtx.robinia.payment.trade.alipay.model.builder.AlipayTradeQueryRequestBuilder;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FPayResult;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FPrecreateResult;
@@ -42,20 +43,6 @@ public class AlipayTradeController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AlipayTradeController.class);
 
-    private static AlipayTradeService tradeService;
-
-    static {
-        /**
-         * 一定要在创建AlipayTradeService之前调用Configs.init()设置默认参数
-         * Configs会读取classpath下的zfbinfo.properties文件配置信息，如果找不到该文件则确认该文件是否在classpath目录
-         */
-        Configs.init("zfbinfo.properties");
-
-        /**
-         * 使用Configs提供的默认参数 AlipayTradeService可以使用单例或者为静态成员对象，不需要反复new
-         */
-        tradeService = new AlipayTradeServiceImpl.ClientBuilder().build();
-    }
 
     /**
      * 当面付2.0 - 条码支付
@@ -64,16 +51,12 @@ public class AlipayTradeController {
      * @return
      */
     @RequestMapping(value = "/pay", method = {RequestMethod.POST})
-    public @ResponseBody Result<PayResponseMessage> tradePay(@Valid PayVO pay, BindingResult result2)
+    public @ResponseBody Result<PayResponseMessage> tradePay(@Valid @RequestBody PayVO pay)
         throws MethodArgumentNotValidException {
         LOGGER.info("Start alipay barcode pay");
-        // if (validResult.hasErrors()) {
-        // LOGGER.error("Parameter error:{}", validResult.getFieldError().getDefaultMessage());
-        // return Result.createByErrorResultMessage(validResult.getFieldError().getDefaultMessage());
-        // }
         Result<PayResponseMessage> result = null;
         // 调用tradePay方法获取当面付应答
-        AlipayF2FPayResult payResult = tradeService.tradePay(pay.getBuilder());
+        AlipayF2FPayResult payResult = AliPayConfig.getAlipayTradeService().tradePay(pay.getBuilder());
         PayResponseMessage responseMessage = new PayResponseMessage();
         responseMessage.setTradeNo(pay.getTradeNo());
         switch (payResult.getTradeStatus()) {
@@ -114,7 +97,7 @@ public class AlipayTradeController {
     public @ResponseBody void tradePay(@PathVariable String tradeNo) {
         AlipayTradeQueryRequestBuilder builder = new AlipayTradeQueryRequestBuilder().setOutTradeNo(tradeNo);
 
-        AlipayF2FQueryResult result = tradeService.queryTradeResult(builder);
+        AlipayF2FQueryResult result = AliPayConfig.getAlipayTradeService().queryTradeResult(builder);
         switch (result.getTradeStatus()) {
             case SUCCESS:
                 LOGGER.info("查询返回该订单支付成功: )");
@@ -148,7 +131,7 @@ public class AlipayTradeController {
     public @ResponseBody PayRefundResponseMessage tradeRefund(@ModelAttribute @Valid PayRefundVO refund,
         BindingResult validResult) {
         PayRefundResponseMessage refundResponseMessage = new PayRefundResponseMessage();
-        AlipayF2FRefundResult result = tradeService.tradeRefund(refund.getBuilder());
+        AlipayF2FRefundResult result = AliPayConfig.getAlipayTradeService().tradeRefund(refund.getBuilder());
         switch (result.getTradeStatus()) {
             case SUCCESS:
                 LOGGER.info("支付宝退款成功: )");
@@ -182,7 +165,7 @@ public class AlipayTradeController {
             // precreateResponseMessage.setErrorMessage("Error!");
             return precreateResponseMessage;
         }
-        AlipayF2FPrecreateResult result = tradeService.tradePrecreate(pay.getBuilder());
+        AlipayF2FPrecreateResult result = AliPayConfig.getAlipayTradeService().tradePrecreate(pay.getBuilder());
         switch (result.getTradeStatus()) {
             case SUCCESS:
                 LOGGER.info("支付宝预下单成功: )");

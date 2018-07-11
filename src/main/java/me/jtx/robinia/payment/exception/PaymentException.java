@@ -5,13 +5,13 @@ package me.jtx.robinia.payment.exception;
  * @date 2018/07/11
  */
 
-public class RestException extends RuntimeException {
+public class PaymentException extends RuntimeException {
     private static final long serialVersionUID = -7986184149529698508L;
 
     private String message;
     private Object[] args;
 
-    public RestException(String message, Object[] args) {
+    public PaymentException(String message, Object[] args) {
         super();
         this.message = message;
         this.args = args;

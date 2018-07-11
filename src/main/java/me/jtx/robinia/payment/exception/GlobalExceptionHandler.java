@@ -25,8 +25,8 @@ public class GlobalExceptionHandler {
         this.messageSource = messageSource;
     }
 
-    @ExceptionHandler(RestException.class)
-    public ResponseEntity<Result> handleIllegalArgument(RestException ex, Locale locale) {
+    @ExceptionHandler(PaymentException.class)
+    public ResponseEntity<Result> handleIllegalArgument(PaymentException ex, Locale locale) {
         String errorMessage = messageSource.getMessage(ex.getMessage(), ex.getArgs(), locale);
         return new ResponseEntity<>(Result.createByErrorResultMessage(errorMessage), HttpStatus.BAD_REQUEST);
     }
