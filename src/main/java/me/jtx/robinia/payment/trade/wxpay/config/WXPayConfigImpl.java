@@ -13,12 +13,12 @@ public class WXPayConfigImpl extends WXPayConfig {
     private static WXPayConfigImpl INSTANCE;
 
     private WXPayConfigImpl() throws Exception {
-        String certPath = "/path/to/apiclient_cert.p12";
-        File file = new File(certPath);
-        InputStream certStream = new FileInputStream(file);
-        this.certData = new byte[(int)file.length()];
-        certStream.read(this.certData);
-        certStream.close();
+//        String certPath = "/path/to/apiclient_cert.p12";
+//        File file = new File(certPath);
+//        InputStream certStream = new FileInputStream(file);
+//        this.certData = new byte[(int)file.length()];
+//        certStream.read(this.certData);
+//        certStream.close();
     }
 
     public static WXPayConfigImpl getInstance() throws Exception {
@@ -34,17 +34,17 @@ public class WXPayConfigImpl extends WXPayConfig {
 
     @Override
     public String getAppID() {
-        return "wx8888888888888888";
+        return "wx6e9638417bff1c13";
     }
 
     @Override
     public String getMchID() {
-        return "12888888";
+        return "1487990592";
     }
 
     @Override
     public String getKey() {
-        return "88888888888888888888888888888888";
+        return "60EBq9BJX5DNa39MZ48bc65TeFEyt6rD";
     }
 
     @Override

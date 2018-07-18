@@ -1,8 +1,13 @@
 package me.jtx.robinia.payment.controller;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,5 +48,21 @@ public class NotifyController {
         LOGGER.info("响应给支付宝:{}", notifyResponse);
         LOGGER.info("====== 完成接收支付宝支付回调通知 ======");
         return notifyResponse;
+    }
+    
+    @RequestMapping(value = "/wechat/notify")
+    @ResponseBody
+	public void weixin_notify(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    	InputStream inputStream = request.getInputStream();
+		StringBuffer sb = new StringBuffer();
+		String s;
+		BufferedReader in = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+		while ((s = in.readLine()) != null) {
+			sb.append(s);
+		}
+		in.close();
+		inputStream.close();
+		LOGGER.debug(sb.toString());
+		System.out.println(sb.toString());
     }
 }

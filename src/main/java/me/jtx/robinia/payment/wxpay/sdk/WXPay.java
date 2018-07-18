@@ -120,7 +120,7 @@ public class WXPay {
         String signTypeInData = reqData.get(WXPayConstants.FIELD_SIGN_TYPE);
         SignType signType;
         if (signTypeInData == null) {
-            signType = SignType.MD5;
+            signType = SignType.HMACSHA256;
         }
         else {
             signTypeInData = signTypeInData.trim();
