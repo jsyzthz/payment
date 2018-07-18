@@ -1,4 +1,4 @@
-package me.jtx.robinia.payment.trade.wxpay.sdk;
+package me.jtx.robinia.payment.wxpay.sdk;
 
 /**
  * 域名管理，实现主备域名自动切换

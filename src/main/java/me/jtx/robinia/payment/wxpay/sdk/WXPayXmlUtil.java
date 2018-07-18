@@ -1,4 +1,4 @@
-package me.jtx.robinia.payment.trade.wxpay.sdk;
+package me.jtx.robinia.payment.wxpay.sdk;
 
 import org.w3c.dom.Document;
 

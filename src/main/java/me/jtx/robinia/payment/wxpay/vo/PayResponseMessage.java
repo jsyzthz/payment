@@ -1,4 +1,4 @@
-package me.jtx.robinia.payment.trade.wxpay.vo;
+package me.jtx.robinia.payment.wxpay.vo;
 
 public class PayResponseMessage {
     private String tradeNo;

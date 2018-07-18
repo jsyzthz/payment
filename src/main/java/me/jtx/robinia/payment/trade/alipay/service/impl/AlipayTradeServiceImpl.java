@@ -1,19 +1,22 @@
 package me.jtx.robinia.payment.trade.alipay.service.impl;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
 
 import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.request.AlipayTradePayRequest;
+import com.alipay.api.request.AlipayTradeWapPayRequest;
 import com.alipay.api.response.AlipayTradePayResponse;
 import com.alipay.api.response.AlipayTradeQueryResponse;
+import com.alipay.api.response.AlipayTradeWapPayResponse;
 
 import me.jtx.robinia.payment.trade.alipay.config.Configs;
 import me.jtx.robinia.payment.trade.alipay.config.Constants;
 import me.jtx.robinia.payment.trade.alipay.model.TradeStatus;
 import me.jtx.robinia.payment.trade.alipay.model.builder.AlipayTradePayRequestBuilder;
 import me.jtx.robinia.payment.trade.alipay.model.builder.AlipayTradeQueryRequestBuilder;
+import me.jtx.robinia.payment.trade.alipay.model.builder.AlipayTradeWapPayRequestBuilder;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FPayResult;
+import me.jtx.robinia.payment.trade.alipay.model.result.AlipayWapPayResult;
 
 /**
  * Created by liuyangkly on 15/7/29.
@@ -199,4 +202,56 @@ public class AlipayTradeServiceImpl extends AbsAlipayTradeService {
 
         return result;
     }
+
+    @Override
+    public AlipayWapPayResult tradeWapPay(AlipayTradeWapPayRequestBuilder builder) {
+        validateBuilder(builder);
+
+        final String outTradeNo = builder.getOutTradeNo();
+
+        AlipayTradeWapPayRequest request = new AlipayTradeWapPayRequest();
+        // 设置平台参数
+        request.setNotifyUrl(builder.getNotifyUrl());
+        String appAuthToken = builder.getAppAuthToken();
+        // todo 等支付宝sdk升级公共参数后使用如下方法
+        // request.setAppAuthToken(appAuthToken);
+        request.putOtherTextParam("app_auth_token", builder.getAppAuthToken());
+
+        // 设置业务参数
+        request.setBizContent(builder.toJsonString());
+        log.info("trade.pay bizContent:" + request.getBizContent());
+
+        // 首先调用支付api
+        AlipayTradeWapPayResponse response = (AlipayTradeWapPayResponse) getResponse(client, request);
+
+        AlipayWapPayResult result = new AlipayWapPayResult(response);
+        if (response != null && Constants.SUCCESS.equals(response.getCode())) {
+            // 支付交易明确成功
+            result.setTradeStatus(TradeStatus.SUCCESS);
+
+        } else if (response != null && Constants.PAYING.equals(response.getCode())) {
+            // 返回用户处理中，则轮询查询交易是否成功，如果查询超时，则调用撤销
+            AlipayTradeQueryRequestBuilder queryBuiler = new AlipayTradeQueryRequestBuilder()
+                                                            .setAppAuthToken(appAuthToken)
+                                                            .setOutTradeNo(outTradeNo);
+            AlipayTradeQueryResponse loopQueryResponse = loopQueryResult(queryBuiler);
+            return checkQueryAndCancel(outTradeNo, appAuthToken, result, loopQueryResponse);
+
+        } else if (tradeError(response)) {
+            // 系统错误，则查询一次交易，如果交易没有支付成功，则调用撤销
+            AlipayTradeQueryRequestBuilder queryBuiler = new AlipayTradeQueryRequestBuilder()
+                                                            .setAppAuthToken(appAuthToken)
+                                                            .setOutTradeNo(outTradeNo);
+            AlipayTradeQueryResponse queryResponse = tradeQuery(queryBuiler);
+            return checkQueryAndCancel(outTradeNo, appAuthToken, result, queryResponse);
+
+        } else {
+            // 其他情况表明该订单支付明确失败
+            result.setTradeStatus(TradeStatus.FAILED);
+        }
+
+        return result;
+    }
+    
+    
 }

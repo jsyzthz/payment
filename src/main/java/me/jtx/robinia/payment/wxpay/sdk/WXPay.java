@@ -1,9 +1,9 @@
-package me.jtx.robinia.payment.trade.wxpay.sdk;
-
-import me.jtx.robinia.payment.trade.wxpay.sdk.WXPayConstants.SignType;
+package me.jtx.robinia.payment.wxpay.sdk;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import me.jtx.robinia.payment.wxpay.sdk.WXPayConstants.SignType;
 
 public class WXPay {
 

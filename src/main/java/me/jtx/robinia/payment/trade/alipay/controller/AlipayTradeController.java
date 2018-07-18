@@ -27,8 +27,7 @@ import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FPayResult;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FPrecreateResult;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FQueryResult;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FRefundResult;
-import me.jtx.robinia.payment.trade.alipay.service.AlipayTradeService;
-import me.jtx.robinia.payment.trade.alipay.service.impl.AlipayTradeServiceImpl;
+import me.jtx.robinia.payment.trade.alipay.model.result.AlipayWapPayResult;
 import me.jtx.robinia.payment.trade.alipay.utils.Utils;
 import me.jtx.robinia.payment.trade.alipay.vo.PayPrecreateResponseMessage;
 import me.jtx.robinia.payment.trade.alipay.vo.PayPrecreateVO;
@@ -36,9 +35,11 @@ import me.jtx.robinia.payment.trade.alipay.vo.PayRefundResponseMessage;
 import me.jtx.robinia.payment.trade.alipay.vo.PayRefundVO;
 import me.jtx.robinia.payment.trade.alipay.vo.PayResponseMessage;
 import me.jtx.robinia.payment.trade.alipay.vo.PayVO;
+import me.jtx.robinia.payment.trade.alipay.vo.WapPayResponseMessage;
+import me.jtx.robinia.payment.trade.alipay.vo.WapPayVO;
 
 @RestController
-@RequestMapping("/v1/trade/alipay/f2f")
+@RequestMapping("/v1/trade/alipay")
 public class AlipayTradeController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AlipayTradeController.class);
@@ -50,7 +51,7 @@ public class AlipayTradeController {
      * @param payVo
      * @return
      */
-    @RequestMapping(value = "/pay", method = {RequestMethod.POST})
+    @RequestMapping(value = "/f2f/pay", method = {RequestMethod.POST})
     public @ResponseBody Result<PayResponseMessage> tradePay(@Valid @RequestBody PayVO pay)
         throws MethodArgumentNotValidException {
         LOGGER.info("Start alipay barcode pay");
@@ -93,7 +94,7 @@ public class AlipayTradeController {
      * 
      * @param tradeNo
      */
-    @RequestMapping(value = "/{tradeNo}", method = {RequestMethod.GET})
+    @RequestMapping(value = "/f2f/{tradeNo}", method = {RequestMethod.GET})
     public @ResponseBody void tradePay(@PathVariable String tradeNo) {
         AlipayTradeQueryRequestBuilder builder = new AlipayTradeQueryRequestBuilder().setOutTradeNo(tradeNo);
 
@@ -156,7 +157,7 @@ public class AlipayTradeController {
         return refundResponseMessage;
     }
 
-    @RequestMapping(value = "/precreate", method = {RequestMethod.POST})
+    @RequestMapping(value = "/f2f/precreate", method = {RequestMethod.POST})
     public @ResponseBody PayPrecreateResponseMessage tradePrecreate(@ModelAttribute @Valid PayPrecreateVO pay,
         BindingResult validResult) {
         PayPrecreateResponseMessage precreateResponseMessage = new PayPrecreateResponseMessage();
@@ -206,6 +207,51 @@ public class AlipayTradeController {
             }
             LOGGER.info("body:" + response.getBody());
         }
+    }
+    
+    /**
+     * 当面付2.0 - 条码支付
+     * 
+     * @param payVo
+     * @return
+     */
+    @RequestMapping(value = "/wap/pay", method = {RequestMethod.POST})
+    public @ResponseBody Result<WapPayResponseMessage> tradeWapPay(@Valid @RequestBody WapPayVO pay)
+        throws MethodArgumentNotValidException {
+        LOGGER.info("Start alipay barcode pay");
+        Result<WapPayResponseMessage> result = null;
+        // 调用tradePay方法获取当面付应答
+        AlipayWapPayResult payResult = AliPayConfig.getAlipayTradeService().tradeWapPay(pay.getBuilder());
+        WapPayResponseMessage responseMessage = new WapPayResponseMessage();
+        responseMessage.setTradeNo(pay.getTradeNo());
+        responseMessage.setPayUrl(payResult.getResponse().getBody());
+        switch (payResult.getTradeStatus()) {
+            case SUCCESS:
+                LOGGER.info("Alipay barcode pay success.");
+                // LOGGER.info("支付宝支付成功: )");
+                result = Result.createBySuccessResult("SUCCESS", responseMessage);
+                break;
+
+            case FAILED:
+                LOGGER.info("Alipay barcode pay failed.");
+                result = Result.createByErrorResult("FAILED", responseMessage);
+                // LOGGER.error("支付宝支付失败!!!");
+                break;
+
+            case UNKNOWN:
+                LOGGER.info("System exception, order status unknown.");
+                result = Result.createByErrorResult("UNKNOWN", responseMessage);
+                // LOGGER.error("系统异常，订单状态未知!!!");
+                break;
+
+            default:
+                LOGGER.info("Unsupport transaction status.");
+                // LOGGER.error("不支持的交易状态，交易返回异常!!!");
+                result = Result.createByErrorResult("DEFAULT", responseMessage);
+                break;
+        }
+        LOGGER.info("End alipay barcode pay");
+        return result;
     }
 
 }

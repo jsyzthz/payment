@@ -5,8 +5,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
-import me.jtx.robinia.payment.trade.wxpay.sdk.IWXPayDomain;
-import me.jtx.robinia.payment.trade.wxpay.sdk.WXPayConfig;
+import me.jtx.robinia.payment.wxpay.sdk.IWXPayDomain;
+import me.jtx.robinia.payment.wxpay.sdk.WXPayConfig;
 
 public class WXPayConfigImpl extends WXPayConfig {
     private byte[] certData;

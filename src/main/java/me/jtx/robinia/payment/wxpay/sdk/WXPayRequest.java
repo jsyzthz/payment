@@ -1,4 +1,4 @@
-package me.jtx.robinia.payment.trade.wxpay.sdk;
+package me.jtx.robinia.payment.wxpay.sdk;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -18,13 +18,14 @@ import org.apache.http.util.EntityUtils;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+
+import static me.jtx.robinia.payment.wxpay.sdk.WXPayConstants.USER_AGENT;
+
 import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.security.SecureRandom;
-
-import static me.jtx.robinia.payment.trade.wxpay.sdk.WXPayConstants.USER_AGENT;
 
 public class WXPayRequest {
     private WXPayConfig config;

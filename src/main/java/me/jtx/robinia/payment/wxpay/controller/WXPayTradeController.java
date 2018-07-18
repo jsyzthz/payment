@@ -1,8 +1,10 @@
-package me.jtx.robinia.payment.trade.wxpay.controller;
+package me.jtx.robinia.payment.wxpay.controller;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.validation.BindingResult;
@@ -14,9 +16,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import me.jtx.robinia.payment.trade.wxpay.config.WXPayConfigImpl;
-import me.jtx.robinia.payment.trade.wxpay.sdk.WXPay;
-import me.jtx.robinia.payment.trade.wxpay.vo.PayResponseMessage;
-import me.jtx.robinia.payment.trade.wxpay.vo.PayVO;
+import me.jtx.robinia.payment.wxpay.sdk.WXPay;
+import me.jtx.robinia.payment.wxpay.vo.PayResponseMessage;
+import me.jtx.robinia.payment.wxpay.vo.PayVO;
 
 @RestController
 @RequestMapping("/v1/trade/wechat")
@@ -73,5 +75,9 @@ public class WXPayTradeController {
             e.printStackTrace();
         }
     }
-
+    
+    @RequestMapping(value = "/notify")
+    public @ResponseBody void notify(HttpServletRequest request, HttpServletResponse response) {
+        
+    }
 }

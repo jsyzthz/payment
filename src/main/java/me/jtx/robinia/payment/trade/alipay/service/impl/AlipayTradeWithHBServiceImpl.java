@@ -11,7 +11,9 @@ import me.jtx.robinia.payment.trade.alipay.config.Constants;
 import me.jtx.robinia.payment.trade.alipay.model.TradeStatus;
 import me.jtx.robinia.payment.trade.alipay.model.builder.AlipayTradePayRequestBuilder;
 import me.jtx.robinia.payment.trade.alipay.model.builder.AlipayTradeQueryRequestBuilder;
+import me.jtx.robinia.payment.trade.alipay.model.builder.AlipayTradeWapPayRequestBuilder;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FPayResult;
+import me.jtx.robinia.payment.trade.alipay.model.result.AlipayWapPayResult;
 import me.jtx.robinia.payment.trade.alipay.service.impl.hb.HbListener;
 import me.jtx.robinia.payment.trade.alipay.service.impl.hb.TradeListener;
 
@@ -300,5 +302,11 @@ public class AlipayTradeWithHBServiceImpl extends AbsAlipayTradeService {
         }
 
         return result;
+    }
+
+    @Override
+    public AlipayWapPayResult tradeWapPay(AlipayTradeWapPayRequestBuilder builder) {
+        // TODO Auto-generated method stub
+         return null;
     }
 }

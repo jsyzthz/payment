@@ -1,12 +1,21 @@
 package me.jtx.robinia.payment.trade.alipay.service.impl;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import com.alipay.api.AlipayClient;
 import com.alipay.api.AlipayResponse;
 import com.alipay.api.request.AlipayTradeCancelRequest;
 import com.alipay.api.request.AlipayTradePrecreateRequest;
 import com.alipay.api.request.AlipayTradeQueryRequest;
 import com.alipay.api.request.AlipayTradeRefundRequest;
-import com.alipay.api.response.*;
+import com.alipay.api.response.AlipayTradeCancelResponse;
+import com.alipay.api.response.AlipayTradePayResponse;
+import com.alipay.api.response.AlipayTradePrecreateResponse;
+import com.alipay.api.response.AlipayTradeQueryResponse;
+import com.alipay.api.response.AlipayTradeRefundResponse;
+import com.alipay.api.response.AlipayTradeWapPayResponse;
+
 import me.jtx.robinia.payment.trade.alipay.config.Configs;
 import me.jtx.robinia.payment.trade.alipay.config.Constants;
 import me.jtx.robinia.payment.trade.alipay.model.TradeStatus;
@@ -18,11 +27,9 @@ import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FPayResult;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FPrecreateResult;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FQueryResult;
 import me.jtx.robinia.payment.trade.alipay.model.result.AlipayF2FRefundResult;
+import me.jtx.robinia.payment.trade.alipay.model.result.AlipayWapPayResult;
 import me.jtx.robinia.payment.trade.alipay.service.AlipayTradeService;
 import me.jtx.robinia.payment.trade.alipay.utils.Utils;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 /**
  * Created by liuyangkly on 15/10/28.
  */
@@ -140,6 +147,32 @@ abstract class AbsAlipayTradeService extends AbsAlipayService implements AlipayT
         }
         return result;
     }
+    
+    // 根据查询结果queryResponse判断交易是否支付成功，如果支付成功则更新result并返回，如果不成功则调用撤销
+    protected AlipayWapPayResult checkQueryAndCancel(String outTradeNo, String appAuthToken, AlipayWapPayResult result,
+                                                   AlipayTradeQueryResponse queryResponse) {
+        if (querySuccess(queryResponse)) {
+            // 如果查询返回支付成功，则返回相应结果
+            result.setTradeStatus(TradeStatus.SUCCESS);
+            result.setResponse(toWapPayResponse(queryResponse));
+            return result;
+        }
+
+        // 如果查询结果不为成功，则调用撤销
+        AlipayTradeCancelRequestBuilder builder = new AlipayTradeCancelRequestBuilder().setOutTradeNo(outTradeNo);
+        builder.setAppAuthToken(appAuthToken);
+        AlipayTradeCancelResponse cancelResponse = cancelPayResult(builder);
+        if (tradeError(cancelResponse)) {
+            // 如果第一次同步撤销返回异常，则标记支付交易为未知状态
+            result.setTradeStatus(TradeStatus.UNKNOWN);
+        } else {
+            // 标记支付为失败，如果撤销未能成功，产生的单边帐由人工处理
+            result.setTradeStatus(TradeStatus.FAILED);
+        }
+        return result;
+    }
+    
+    
 
     // 根据外部订单号outTradeNo撤销订单
     protected AlipayTradeCancelResponse tradeCancel(AlipayTradeCancelRequestBuilder builder) {
@@ -241,6 +274,33 @@ abstract class AbsAlipayTradeService extends AbsAlipayService implements AlipayT
         payResponse.setOpenId(response.getOpenId());
         payResponse.setOutTradeNo(response.getOutTradeNo());
         payResponse.setReceiptAmount(response.getReceiptAmount());
+        payResponse.setTotalAmount(response.getTotalAmount());
+        payResponse.setTradeNo(response.getTradeNo());
+        return payResponse;
+    }
+    
+    // 将查询应答转换为支付应答
+    protected AlipayTradeWapPayResponse toWapPayResponse(AlipayTradeQueryResponse response) {
+        AlipayTradeWapPayResponse payResponse = new AlipayTradeWapPayResponse();
+        // 只有查询明确返回成功才能将返回码设置为10000，否则均为失败
+        payResponse.setCode(querySuccess(response) ? Constants.SUCCESS : Constants.FAILED);
+        // 补充交易状态信息
+        StringBuilder msg = new StringBuilder(response.getMsg())
+                .append(" tradeStatus:")
+                .append(response.getTradeStatus());
+        payResponse.setMsg(msg.toString());
+        payResponse.setSubCode(response.getSubCode());
+        payResponse.setSubMsg(response.getSubMsg());
+        payResponse.setBody(response.getBody());
+        payResponse.setParams(response.getParams());
+
+        // payResponse应该是交易支付时间，但是response里是本次交易打款给卖家的时间,是否有问题
+        // payResponse.setGmtPayment(response.getSendPayDate());
+//        payResponse.setBuyerLogonId(response.getBuyerLogonId());//TODO FIXME
+//        payResponse.setFundBillList(response.getFundBillList());
+//        payResponse.setOpenId(response.getOpenId());
+        payResponse.setOutTradeNo(response.getOutTradeNo());
+//        payResponse.setReceiptAmount(response.getReceiptAmount());
         payResponse.setTotalAmount(response.getTotalAmount());
         payResponse.setTradeNo(response.getTradeNo());
         return payResponse;

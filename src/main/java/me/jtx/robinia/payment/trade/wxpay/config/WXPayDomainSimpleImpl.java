@@ -6,9 +6,9 @@ import java.util.Map;
 
 import org.apache.http.conn.ConnectTimeoutException;
 
-import me.jtx.robinia.payment.trade.wxpay.sdk.IWXPayDomain;
-import me.jtx.robinia.payment.trade.wxpay.sdk.WXPayConfig;
-import me.jtx.robinia.payment.trade.wxpay.sdk.WXPayConstants;
+import me.jtx.robinia.payment.wxpay.sdk.IWXPayDomain;
+import me.jtx.robinia.payment.wxpay.sdk.WXPayConfig;
+import me.jtx.robinia.payment.wxpay.sdk.WXPayConstants;
 
 public class WXPayDomainSimpleImpl implements IWXPayDomain {
     private WXPayDomainSimpleImpl() {}
