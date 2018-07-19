@@ -1,6 +1,12 @@
 package me.jtx.robinia.payment.wxpay.service;
 
 import java.util.Date;
+import java.util.Map;
+
+import me.jtx.robinia.payment.model.RobiniaPayResponse;
+import me.jtx.robinia.payment.wxpay.vo.WXPayBill;
+import me.jtx.robinia.payment.wxpay.vo.WXPayCloseOrder;
+import me.jtx.robinia.payment.wxpay.vo.WXPayOrder;
 
 /**
  * @author huazhong
@@ -10,17 +16,17 @@ public interface IWXPayService {
 
     void payType1();
 
-    void payType2() throws Exception;
+    RobiniaPayResponse payType2(Map<String, String> data) throws Exception;
 
     void payH5();
-    
-    String orderQuery(String outTradeNo);
+
+    WXPayOrder orderQuery(String outTradeNo) throws Exception;
 
     String refund();
-    
+
     String refundQuery(String outTradeNo) throws Exception;
 
-    String closeOrder();
+    WXPayCloseOrder closeOrder(String outTradeNo) throws Exception;
 
-    void downlaodBill(Date billDate, String billType);
+    WXPayBill downlaodBill(Date billDate, String billType) throws Exception;
 }

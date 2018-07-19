@@ -19,7 +19,7 @@
 			</rollingPolicy>
 		</appender>
 
-		<root level="ERROR">
+		<root level="DEBUG">
 			<appender-ref ref="CONSOLE" />
 			<appender-ref ref="ROLLING-FILE" />
 		</root>
@@ -46,7 +46,7 @@
 			</rollingPolicy>
 		</appender>
 
-		<root level="ERROR">
+		<root level="DEBUG">
 			<appender-ref ref="ROLLING-FILE" />
 		</root>
 
