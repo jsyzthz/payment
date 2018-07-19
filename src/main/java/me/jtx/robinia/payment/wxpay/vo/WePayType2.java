@@ -60,7 +60,9 @@ public class WePayType2 {
     }
 
     public BigDecimal getTotalFeeCents() {
-        return totalFee.multiply(new BigDecimal(100));
+    	BigDecimal fenBd = totalFee.multiply(new BigDecimal(100));
+		fenBd = fenBd.setScale(0, BigDecimal.ROUND_HALF_UP);
+		return fenBd;
     }
 
     public void setTotalFee(BigDecimal totalFee) {
