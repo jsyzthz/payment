@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.Map;
 
 import me.jtx.robinia.payment.model.RobiniaPayResponse;
+import me.jtx.robinia.payment.wxpay.vo.H5PayResponse;
 import me.jtx.robinia.payment.wxpay.vo.MicroPayResponse;
 import me.jtx.robinia.payment.wxpay.vo.WXPayBill;
 import me.jtx.robinia.payment.wxpay.vo.WXPayCloseOrder;
@@ -14,12 +15,14 @@ import me.jtx.robinia.payment.wxpay.vo.WXPayOrder;
  * @date 2018/07/18
  */
 public interface IWXPayService {
-	
-	MicroPayResponse microPay(Map<String, String> data) throws Exception;
+
+    MicroPayResponse microPay(Map<String, String> data) throws Exception;
 
     void payType1();
 
     RobiniaPayResponse payType2(Map<String, String> data) throws Exception;
+
+    H5PayResponse h5Pay(Map<String, String> data) throws Exception;
 
     void payH5();
 

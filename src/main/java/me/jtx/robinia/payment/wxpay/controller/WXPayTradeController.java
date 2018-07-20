@@ -30,6 +30,8 @@ import me.jtx.robinia.payment.trade.Result;
 import me.jtx.robinia.payment.trade.wxpay.config.WXPayConfigImpl;
 import me.jtx.robinia.payment.wxpay.sdk.WXPay;
 import me.jtx.robinia.payment.wxpay.service.IWXPayService;
+import me.jtx.robinia.payment.wxpay.vo.H5Pay;
+import me.jtx.robinia.payment.wxpay.vo.H5PayResponse;
 import me.jtx.robinia.payment.wxpay.vo.MicroPay;
 import me.jtx.robinia.payment.wxpay.vo.MicroPayResponse;
 import me.jtx.robinia.payment.wxpay.vo.PayResponseMessage;
@@ -43,137 +45,189 @@ import me.jtx.robinia.payment.wxpay.vo.WePayType2;
 @RestController
 @RequestMapping("/v1/trade/wechat")
 public class WXPayTradeController {
-	private static final Logger LOGGER = LoggerFactory.getLogger(WXPayTradeController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WXPayTradeController.class);
 
-	@Autowired
-	private IWXPayService payService;
+    @Autowired
+    private IWXPayService payService;
 
-	@Autowired
-	@Qualifier("notifyWXPayService")
-	private IPayNotifyService notifyPayService;
+    @Autowired
+    @Qualifier("notifyWXPayService")
+    private IPayNotifyService notifyPayService;
 
-	@RequestMapping(value = "/micropay", method = { RequestMethod.POST })
-	public @ResponseBody Result<MicroPayResponse> microPay(@Valid @RequestBody MicroPay microPay) {
-		LOGGER.debug("微信刷卡支付: {}.", microPay);
-		Map<String, String> data = new HashMap<String, String>();
-		data.put("body", microPay.getDescription());
-		data.put("out_trade_no", microPay.getOutTradeNo());
-		data.put("device_info", microPay.getDeviceInfo());
-		data.put("fee_type", microPay.getFeeType());
-		data.put("total_fee", microPay.getTotalFeeCents().toPlainString());
-		data.put("spbill_create_ip", "112.87.181.223");
-		data.put("auth_code", microPay.getAuthCode());
-		if (StringUtils.isNotEmpty(microPay.getAttach())) {
-			data.put("attach", microPay.getAttach());
-		}
-		MicroPayResponse microPayResponse;
-		try {
-			microPayResponse=payService.microPay(data);
-			return Result.createBySuccessResult("SUCCESS", microPayResponse);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return Result.createByErrorResult();
-	}
+    @RequestMapping(value = "/micropay", method = {RequestMethod.POST})
+    public @ResponseBody Result<MicroPayResponse> microPay(@Valid @RequestBody MicroPay microPay) {
+        LOGGER.debug("微信刷卡支付: {}.", microPay);
+        Map<String, String> data = new HashMap<String, String>();
+        data.put("body", microPay.getDescription());
+        data.put("out_trade_no", microPay.getOutTradeNo());
+        data.put("device_info", microPay.getDeviceInfo());
+        data.put("fee_type", microPay.getFeeType());
+        data.put("total_fee", microPay.getTotalFeeCents().toPlainString());
+        data.put("spbill_create_ip", "112.87.181.223");
+        data.put("auth_code", microPay.getAuthCode());
+        if (StringUtils.isNotEmpty(microPay.getAttach())) {
+            data.put("attach", microPay.getAttach());
+        }
+        MicroPayResponse microPayResponse;
+        try {
+            microPayResponse = payService.microPay(data);
+            return Result.createBySuccessResult("SUCCESS", microPayResponse);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Result.createByErrorResult();
+    }
 
-	@RequestMapping(value = "/pay", method = { RequestMethod.POST })
-	public @ResponseBody PayResponseMessage tradePay(@ModelAttribute @Valid PayVO pay, BindingResult validResult) {
-		PayResponseMessage responseMessage = new PayResponseMessage();
-		responseMessage.setTradeNo(pay.getTradeNo());
-		if (validResult.hasErrors()) {
-			// responseMessage.setErrorMessage("Error!");
-			return responseMessage;
-		}
+    @RequestMapping(value = "/pay", method = {RequestMethod.POST})
+    public @ResponseBody PayResponseMessage tradePay(@ModelAttribute @Valid PayVO pay, BindingResult validResult) {
+        PayResponseMessage responseMessage = new PayResponseMessage();
+        responseMessage.setTradeNo(pay.getTradeNo());
+        if (validResult.hasErrors()) {
+            // responseMessage.setErrorMessage("Error!");
+            return responseMessage;
+        }
 
-		try {
-			WXPay wxpay = new WXPay(WXPayConfigImpl.getInstance());
-			Map<String, String> resp = wxpay.microPay(pay.getParams());
-			System.out.println(resp);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return responseMessage;
-	}
+        try {
+            WXPay wxpay = new WXPay(WXPayConfigImpl.getInstance());
+            Map<String, String> resp = wxpay.microPay(pay.getParams());
+            System.out.println(resp);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return responseMessage;
+    }
 
-	@RequestMapping(value = "/pay2", method = { RequestMethod.POST })
-	public @ResponseBody Result<RobiniaPayResponse> tradePay2(@Valid @RequestBody WePayType2 wePay) {
-		LOGGER.debug("微信扫码支付模式二: {}.", wePay);
-		Map<String, String> data = new HashMap<String, String>();
-		data.put("body", wePay.getDescription());
-		data.put("out_trade_no", wePay.getOutTradeNo());
-		data.put("device_info", wePay.getDeviceInfo());
-		data.put("fee_type", wePay.getFeeType());
-		data.put("total_fee", wePay.getTotalFeeCents().toPlainString());
-		data.put("spbill_create_ip", "112.87.181.223");
-		data.put("notify_url", "http://robina.free.ngrok.cc/v1/trade/wechat/notify");
-		data.put("trade_type", "NATIVE"); // 此处指定为扫码支付
-		if (StringUtils.isNotEmpty(wePay.getProductId())) {
-			data.put("product_id", wePay.getProductId());
-		}
-		RobiniaPayResponse payResponse;
-		try {
-			payResponse = payService.payType2(data);
-			return Result.createBySuccessResult("SUCCESS", payResponse);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+    @RequestMapping(value = "/pay2", method = {RequestMethod.POST})
+    public @ResponseBody Result<RobiniaPayResponse> tradePay2(@Valid @RequestBody WePayType2 wePay) {
+        LOGGER.debug("微信扫码支付模式二: {}.", wePay);
+        Map<String, String> data = new HashMap<String, String>();
+        data.put("body", wePay.getDescription());
+        data.put("out_trade_no", wePay.getOutTradeNo());
+        data.put("device_info", wePay.getDeviceInfo());
+        data.put("fee_type", wePay.getFeeType());
+        data.put("total_fee", wePay.getTotalFeeCents().toPlainString());
+        data.put("spbill_create_ip", "112.87.181.223");
+        data.put("notify_url", "http://robina.free.ngrok.cc/v1/trade/wechat/notify");
+        data.put("trade_type", "NATIVE"); // 此处指定为扫码支付
+        if (StringUtils.isNotEmpty(wePay.getProductId())) {
+            data.put("product_id", wePay.getProductId());
+        }
+        RobiniaPayResponse payResponse;
+        try {
+            payResponse = payService.payType2(data);
+            return Result.createBySuccessResult("SUCCESS", payResponse);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-		return Result.createByErrorResult();
-	}
+        return Result.createByErrorResult();
+    }
 
-	@RequestMapping(value = "/{outTradeNo}", method = { RequestMethod.GET })
-	public @ResponseBody Result<WXPayOrder> tradePay(@PathVariable String outTradeNo) {
-		LOGGER.debug("微信查询订单{}.", outTradeNo);
-		try {
-			WXPayOrder order = payService.orderQuery(outTradeNo);
-			return Result.createBySuccessResult("SUCCESS", order);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return Result.createByErrorResult();
-	}
+    @RequestMapping(value = "/h5pay", method = {RequestMethod.POST})
+    public @ResponseBody Result<H5PayResponse> h5Pay(@Valid @RequestBody H5Pay h5Pay) {
+        LOGGER.debug("H5支付: {}.", h5Pay);
+        Map<String, String> data = new HashMap<String, String>();
+        data.put("body", h5Pay.getDescription());
+        data.put("out_trade_no", h5Pay.getOutTradeNo());
+        data.put("total_fee", h5Pay.getTotalFeeCents().toPlainString());
+        data.put("spbill_create_ip", "112.87.181.223");
+        data.put("notify_url", "http://robina.free.ngrok.cc/v1/trade/wechat/notify");
+        data.put("trade_type", "MWEB"); // 此处指定为扫码支付
+        if (StringUtils.isNotEmpty(h5Pay.getProductId())) {
+            data.put("product_id", h5Pay.getProductId());
+        }
+        if (StringUtils.isNotEmpty(h5Pay.getDeviceInfo())) {
+            data.put("device_info", h5Pay.getDeviceInfo());
+        }
+        if (StringUtils.isNotEmpty(h5Pay.getFeeType())) {
+            data.put("fee_type", h5Pay.getFeeType());
+        }
+        if (StringUtils.isNotEmpty(h5Pay.getAttach())) {
+            data.put("attach", h5Pay.getAttach());
+        }
 
-	@RequestMapping(value = "/{outTradeNo}/actions/close", method = { RequestMethod.GET })
-	public @ResponseBody Result<WXPayCloseOrder> close(@PathVariable String outTradeNo) {
-		LOGGER.debug("微信关闭订单{}.", outTradeNo);
-		try {
-			WXPayCloseOrder closeOrder = payService.closeOrder(outTradeNo);
-			return Result.createBySuccessResult("SUCCESS", closeOrder);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return Result.createByErrorResult();
-	}
+        H5PayResponse H5payResponse;
+        try {
+            H5payResponse = payService.h5Pay(data);
+            return Result.createBySuccessResult("SUCCESS", H5payResponse);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-	@RequestMapping(value = "/notify", produces = { "application/xml;charset=UTF-8" })
-	public @ResponseBody WXPayNotifyResponse notify(HttpServletRequest request) {
-		try {
-			String notifyData = IOUtils.toString(request.getInputStream(), request.getCharacterEncoding());
+        return Result.createByErrorResult();
+    }
 
-			LOGGER.debug("微信支付回调请求.{}", notifyData);
-			boolean result = notifyPayService.handlePayNotify(notifyData);
-			if (result) {
-				return new WXPayNotifyResponse("SUCCESS", "OK");
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return new WXPayNotifyResponse("FAIL", "报文为空");
-	}
+    @RequestMapping(value = "/{outTradeNo}", method = {RequestMethod.GET})
+    public @ResponseBody Result<WXPayOrder> tradePay(@PathVariable String outTradeNo) {
+        LOGGER.debug("微信查询订单{}.", outTradeNo);
+        try {
+            WXPayOrder order = payService.orderQuery(outTradeNo);
+            return Result.createBySuccessResult("SUCCESS", order);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Result.createByErrorResult();
+    }
 
-	@RequestMapping(value = "/bill/{billDate}/{billType}/download")
-	public @ResponseBody Result<WXPayBill> downloadBill(
-			@PathVariable @DateTimeFormat(pattern = "yyyyMMdd") Date billDate, @PathVariable String billType) {
+    @RequestMapping(value = "/{outTradeNo}/actions/close", method = {RequestMethod.GET})
+    public @ResponseBody Result<WXPayCloseOrder> close(@PathVariable String outTradeNo) {
+        LOGGER.debug("微信关闭订单{}.", outTradeNo);
+        try {
+            WXPayCloseOrder closeOrder = payService.closeOrder(outTradeNo);
+            return Result.createBySuccessResult("SUCCESS", closeOrder);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Result.createByErrorResult();
+    }
 
-		try {
-			WXPayBill bill = payService.downlaodBill(billDate, billType);
-			return Result.createBySuccessResult("SUCCESS", bill);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return Result.createByErrorResult();
-	}
+    @RequestMapping(value = "/notify", produces = {"application/xml;charset=UTF-8"})
+    public @ResponseBody WXPayNotifyResponse notify(HttpServletRequest request) {
+        try {
+            String notifyData = IOUtils.toString(request.getInputStream(), request.getCharacterEncoding());
+
+            LOGGER.debug("微信支付回调请求.{}", notifyData);
+            boolean result = notifyPayService.handlePayNotify(notifyData);
+            if (result) {
+                return new WXPayNotifyResponse("SUCCESS", "OK");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new WXPayNotifyResponse("FAIL", "报文为空");
+    }
+
+    @RequestMapping(value = "/bill/{billDate}/{billType}/download")
+    public @ResponseBody Result<WXPayBill>
+        downloadBill(@PathVariable @DateTimeFormat(pattern = "yyyyMMdd") Date billDate, @PathVariable String billType) {
+
+        try {
+            WXPayBill bill = payService.downlaodBill(billDate, billType);
+            return Result.createBySuccessResult("SUCCESS", bill);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return Result.createByErrorResult();
+    }
+
+    @RequestMapping(value = "/h5pay/success")
+    public @ResponseBody WXPayNotifyResponse paySuccess(HttpServletRequest request) {
+        try {
+            String notifyData = IOUtils.toString(request.getInputStream(), request.getCharacterEncoding());
+
+            LOGGER.debug("微信支付回调请求.{}", notifyData);
+            boolean result = notifyPayService.handlePayNotify(notifyData);
+            if (result) {
+                return new WXPayNotifyResponse("SUCCESS", "OK");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new WXPayNotifyResponse("FAIL", "报文为空");
+    }
 }
