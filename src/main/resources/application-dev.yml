@@ -18,3 +18,7 @@ alipay:
   cancelDuration: 2000
   heartBeatDelay: 5
   heartBeatDuration: 900
+  
+unionpay:
+  notify:
+    url: http://3s.dkys.org:12465/v1/trade/unionpay/notify
